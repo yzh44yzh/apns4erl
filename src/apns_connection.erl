@@ -29,6 +29,8 @@
         , port/1
         , certfile/1
         , keyfile/1
+        , cert/1
+        , key/1
         , type/1
         , gun_connection/1
         , close_connection/1
@@ -65,6 +67,8 @@
                          , apple_port := inet:port_number()
                          , certfile   => path()
                          , keyfile    => path()
+                         , cert       => binary()
+                         , key        => binary()
                          , type       := type()
                          }.
 
@@ -278,6 +282,14 @@ certfile(#{certfile := Certfile}) ->
 keyfile(#{keyfile := Keyfile}) ->
   Keyfile.
 
+-spec cert(connection()) -> binary().
+cert(#{cert := Cert}) ->
+    Cert.
+
+-spec key(connection()) -> binary().
+key(#{key := Key}) ->
+    Key.
+
 -spec type(connection()) -> type().
 type(#{type := Type}) ->
   Type.
@@ -293,9 +305,12 @@ open_gun_connection(Connection) ->
 
   TransportOpts = case type(Connection) of
     cert ->
-      Certfile = certfile(Connection),
-      Keyfile = keyfile(Connection),
-      [{certfile, Certfile}, {keyfile, Keyfile}];
+        case Connection of
+            #{certfile := Certfile, keyfile := Keyfile} ->
+                [{certfile, Certfile}, {keyfile, Keyfile}];
+            #{cert := Cert, key := Key} ->
+                [{cert, Cert}, {key, Key}]
+        end;
     token ->
       []
   end,
